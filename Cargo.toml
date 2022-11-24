@@ -1,0 +1,10 @@
+[package]
+name = "puzzle-helper"
+version = "0.1.0"
+authors = ["Mitchell Perilstein <mitchell.perilstein@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rustyline = "10.0.0"
