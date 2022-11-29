@@ -49,21 +49,19 @@ fn partition(count: Int, max: Int, n: Int) {
     check_showvec(count, max, &v);
 }
 
-fn trydiv(p: Int, x: Int, out: &mut Vec<Int>) -> Int {
-    let mut n = x;
+fn trydiv(p: Int, n: &mut Int, out: &mut Vec<Int>) {
     while n % p == 0 {
         out.push(p);
         n /= p;
     }
-    return n;
 }
 
 fn factor(mut n: Int) {
     let mut out: Vec<Int> = vec![];
     let mut p = 3;
-    n = trydiv(2, n, &mut out);
+    trydiv(2, &mut n, &mut out);
     while p <= f32::sqrt(n as f32) as Int {
-        n = trydiv(p, n, &mut out);
+        trydiv(p, &mut n, &mut out);
         p += 2;
     }
     if n > 1 {
