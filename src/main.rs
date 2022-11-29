@@ -49,10 +49,10 @@ fn partition(count: Int, max: Int, n: Int) {
     check_showvec(count, max, &v);
 }
 
-fn trydiv(p: Int, n: &mut Int, out: &mut Vec<Int>) {
-    while n % p == 0 {
+fn trydiv(p: Int, x: &mut Int, out: &mut Vec<Int>) {
+    while *x % p == 0 {
         out.push(p);
-        n /= p;
+        *x /= p;
     }
 }
 
@@ -129,20 +129,4 @@ fn main() -> Result<()> {
         }
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let v: Vec<u32> = vec![4, 1, 1];
-        let i = vec.len() - 1;
-        while i > 0 && v[i] == 1 {
-            i -= 1;
-        }
-
-        //let v: Vec<_> = xs.into_iter().filter_map(|x| x > 1).collect();
-
-        assert_eq!(v.len(), 1);
-    }
 }
