@@ -1,7 +1,7 @@
 use rustyline::error::ReadlineError;
 use rustyline::{Editor, Result};
 
-type Int = u32;
+type Int = u64;
 
 fn showvec(xs: &Vec<Int>) {
     print!("  ");
@@ -16,45 +16,44 @@ fn sum(xs: Vec<Int>) {
     showvec(&out);
 }
 
-fn check_showvec(count: Int, xs: &Vec<Int>) {
-    if xs.len() as Int == count {
+fn check_showvec(count: Int, max: Int, xs: &Vec<Int>) {
+    if xs.len() as Int == count && xs.iter().max().unwrap() <= &max {
         showvec(xs);
     }
 }
 
-fn partition(count: Int, n: Int) {
+fn partition(count: Int, max: Int, n: Int) {
     // generate all partitions of n but only print ones fitting the spec
 
     // Knuth 7.2.1.4: Generating All Partitions
     // https://web.archive.org/web/20170330174929/http://cs.utsa.edu/~wagner/knuth/fasc3b.pdf
     let mut v: Vec<Int> = vec![n];
     while v[0] != 1 {
-        check_showvec(count, &v);
+        check_showvec(count, max, &v);
 
         let mut x = v.pop().unwrap();
         while x == 1 {
             x = v.pop().unwrap();
         }
         x -= 1;
-    
-        let mut tot: u32 = v.iter().sum();
-        while tot + x < n { 
+
+        let mut tot: Int = v.iter().sum();
+        while tot + x < n {
             v.push(x);
             tot += x;
         }
         if tot < n {
-            v.push(n-tot);
+            v.push(n - tot);
         }
     }
-    check_showvec(count, &v);
+    check_showvec(count, max, &v);
 }
-
 
 fn trydiv(p: Int, x: Int, out: &mut Vec<Int>) -> Int {
     let mut n = x;
     while n % p == 0 {
         out.push(p);
-        n = n / p;
+        n /= p;
     }
     return n;
 }
@@ -99,13 +98,15 @@ fn parse(line: String) {
             factor(ins[0]);
         }
         "p" => {
-            partition(ins[0], ins[1]);
+            partition(ins[0], ins[1], ins[2]);
         }
         _ => {
-            println!("Help:
-   + a b c...      - sum of arguments
-   f n             - factorize n
-   p count n       - partitions of n");
+            println!(
+                "Help:
+   + a b c...          - sum of arguments
+   f n                 - factorize n
+   p count max n       - partitions of n"
+            );
         }
     }
 }
@@ -136,14 +137,14 @@ fn main() -> Result<()> {
 mod tests {
     #[test]
     fn it_works() {
-        let v: Vec<u32> = vec![4,1,1];
+        let v: Vec<u32> = vec![4, 1, 1];
         let i = vec.len() - 1;
-        while i>0 && v[i] == 1 {
-            i-=1;
+        while i > 0 && v[i] == 1 {
+            i -= 1;
         }
-        
+
         //let v: Vec<_> = xs.into_iter().filter_map(|x| x > 1).collect();
-        
+
         assert_eq!(v.len(), 1);
     }
 }
