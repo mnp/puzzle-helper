@@ -1,3 +1,5 @@
+use rug::{Integer};
+use rug::integer::IsPrime;
 use rustyline::error::ReadlineError;
 use rustyline::{Editor, Result};
 
@@ -11,9 +13,34 @@ fn showvec(xs: &Vec<Int>) {
     println!();
 }
 
-fn sum(xs: Vec<Int>) {
+fn xfoo(n: Int) {
+    let power = Integer::from(n).is_perfect_power();    
+    let nprime = Integer::from(n).next_prime();
+    println!("  perfect power: {}", power);
+    let isprime = match Integer::from(n).is_probably_prime(30) {
+        IsPrime::Probably => { "probably" }
+        IsPrime::Yes => { "yes" }
+        IsPrime::No => { "no" }
+    };
+    println!("  probably prime: {}", isprime);
+    println!("  next prime: {}", nprime);
+}
+
+fn add(xs: Vec<Int>) {
     let out: Vec<Int> = vec![xs.iter().sum()];
     showvec(&out);
+}
+
+fn subtract(xs: Vec<Int>) {
+    let mut zs = xs;
+    zs.sort();
+
+    let mut z: Int = zs.pop().unwrap();
+    while let Some(n) = zs.pop() {
+        z = z - n;
+    }
+
+    println!("  {}", z);
 }
 
 fn check_showvec(count: Int, max: Int, xs: &Vec<Int>) {
@@ -56,8 +83,8 @@ fn trydiv(p: Int, x: &mut Int, out: &mut Vec<Int>) {
     }
 }
 
-fn factor(mut n: Int) {
-    let mut out: Vec<Int> = vec![];
+// this is no pollard-rho but i'll do for now
+fn factor(mut n: Int, mut out: &mut Vec<Int>) {
     let mut p = 3;
     trydiv(2, &mut n, &mut out);
     while p <= f32::sqrt(n as f32) as Int {
@@ -67,14 +94,17 @@ fn factor(mut n: Int) {
     if n > 1 {
         out.push(n);
     }
-    showvec(&out);
 }
 
 fn parse(line: String) {
     let mut words: Vec<&str> = line.trim().split(' ').collect();
     let mut ins: Vec<Int> = vec![];
-    let cmd = words[0];
-    words.remove(0);
+    let cmd = words.remove(0);
+
+    if words.len() < 1 {
+        println!("Need at least one number");
+        return;
+    }
 
     for w in words.iter() {
         match w.parse::<Int>() {
@@ -90,10 +120,18 @@ fn parse(line: String) {
 
     match cmd {
         "s" | "+" => {
-            sum(ins);
+            add(ins);
+        }
+        "m" | "-" => {
+            subtract(ins);
         }
         "f" => {
-            factor(ins[0]);
+	    let mut outs: Vec<Int> = vec![];
+            factor(ins[0], &mut outs);
+	    showvec(&outs);
+        }
+        "x" => {
+            xfoo(ins[0]);
         }
         "p" => {
             partition(ins[0], ins[1], ins[2]);
@@ -103,7 +141,8 @@ fn parse(line: String) {
                 "Help:
    + a b c...          - sum of arguments
    f n                 - factorize n
-   p count max n       - partitions of n"
+   p count max n       - partitions of n
+   x n                 - experiments"
             );
         }
     }
@@ -129,4 +168,13 @@ fn main() -> Result<()> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        use rug::{Complete, Integer};
+        assert_eq!(Integer::factorial(10).complete(), 3628800);
+    }
 }
