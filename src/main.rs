@@ -7,6 +7,10 @@ use rustyline::{Editor, Result};
 
 type Int = u64;
 
+struct Settings {
+    max_val: u8,
+}
+
 struct Power {
     base: Int,
     exponent: Int,
@@ -176,11 +180,19 @@ fn factor(mut n: Int) -> Vec<Int> {
     out
 }
 
+fn check_max(n: u8) -> bool {
+    if n > 0 {
+        return true;
+    }
+    println!("Must set max first");
+    false
+}
+
 fn check_args(xs: &Vec<Int>, n: usize) -> bool {
     if xs.len() == n {
         return true;
     }
-    println!("Expected {} numbers", n);
+    println!("Expected {} args", n);
     false
 }
 
@@ -188,14 +200,16 @@ fn help() {
     println!(
         "Help:
    + a b c...          - sum of arguments
+   - a b c...          - difference of arguments (left largest)
    f n                 - factorize n
-   pu count max n       - partitions of n, unique only 
-   pd count max n       - partitions of n, duplicates allowed
+   max n               - set max cell value for pu and pd
+   pu count n          - partitions of n, unique only 
+   pd count n          - partitions of n, duplicates allowed
    x n                 - experiments"
     );
 }
 
-fn parse_args(line: String) {
+fn parse_args(line: String, settings: &mut Settings) {
     let mut words: Vec<&str> = line.trim().split(' ').collect();
     let mut ins: Vec<Int> = vec![];
     let cmd = words.remove(0);
@@ -213,26 +227,35 @@ fn parse_args(line: String) {
     }
 
     match cmd {
-        "s" | "+" => {
-            add(ins);
-        }
         "m" | "-" => {
             subtract(ins);
         }
         "f" => {
-            let outs = factor(ins[0]);
-            showvec(&outs);
+            if check_args(&ins, 1) {
+                let outs = factor(ins[0]);
+                showvec(&outs);
+            }
         }
         "x" => {
             xfoo(ins[0]);
         }
         "pu" => {
-            check_args(&ins, 3);
-            partition(ins[0], ins[1], ins[2], true);
+            if check_max(settings.max_val) && check_args(&ins, 2) {
+                partition(ins[0], settings.max_val as Int, ins[1], true);
+            }
         }
         "pd" => {
-            check_args(&ins, 3);
-            partition(ins[0], ins[1], ins[2], false);
+            if check_max(settings.max_val) && check_args(&ins, 2) {
+                partition(ins[0], settings.max_val as Int, ins[1], false);
+            }
+        }
+        "s" | "+" => {
+            add(ins);
+        }
+        "max" => {
+            if check_args(&ins, 1) {
+                settings.max_val = ins[0] as u8;
+            }
         }
         _ => {
             help();
@@ -242,12 +265,13 @@ fn parse_args(line: String) {
 
 fn main() -> Result<()> {
     let mut rl = Editor::<()>::new()?;
+    let mut settings = Settings { max_val: 0 };
     loop {
-        let readline = rl.readline(">> ");
+        let readline = rl.readline(format!("{}>> ", settings.max_val).as_str());
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
-                parse_args(line);
+                parse_args(line, &mut settings);
             }
             Err(ReadlineError::Interrupted) | Err(ReadlineError::Eof) => {
                 println!("bye");
