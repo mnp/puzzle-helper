@@ -105,12 +105,11 @@ fn mul(xs: Vec<Int>) {
     showvec(&out);
 }
 
-fn subtract(xs: Vec<Int>) {
-    let mut zs = xs;
-    zs.sort();
+fn subtract(mut xs: Vec<Int>) {
+    xs.sort();
 
-    let mut z: Int = zs.pop().unwrap();
-    while let Some(n) = zs.pop() {
+    let mut z: Int = xs.pop().unwrap();
+    for n in xs {
         z = z - n;
     }
 
