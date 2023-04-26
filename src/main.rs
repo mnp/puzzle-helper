@@ -100,6 +100,11 @@ fn add(xs: Vec<Int>) {
     showvec(&out);
 }
 
+fn mul(xs: Vec<Int>) {
+    let out: Vec<Int> = vec![xs.iter().product()];
+    showvec(&out);
+}
+
 fn subtract(xs: Vec<Int>) {
     let mut zs = xs;
     zs.sort();
@@ -201,6 +206,7 @@ fn help() {
         "Help:
    + a b c...          - sum of arguments
    - a b c...          - difference of arguments (left largest)
+   * a b c...          - product of arguments
    f n                 - factorize n
    max n               - set max cell value for pu and pd
    pu count n          - partitions of n, unique only 
@@ -248,6 +254,9 @@ fn parse_args(line: String, settings: &mut Settings) {
             if check_max(settings.max_val) && check_args(&ins, 2) {
                 partition(ins[0], settings.max_val as Int, ins[1], false);
             }
+        }
+        "*" => {
+            mul(ins);
         }
         "s" | "+" => {
             add(ins);
