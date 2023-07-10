@@ -128,21 +128,33 @@ fn is_unique(xs: &Vec<Int>) -> bool {
     true
 }
 
-fn check_showvec(count: Int, max: Int, xs: &Vec<Int>, uniquify: bool) {
-    if xs.len() as Int == count && xs.iter().max().unwrap() <= &max && (!uniquify || is_unique(&xs))
+fn intersects(a: &Vec<Int>, b: &Vec<Int>) -> bool {
+    for ia in a {
+        if b.contains(ia) {
+            return true;
+        }
+    }
+    false
+}
+
+fn check_showvec(count: Int, max: Int, xs: &Vec<Int>, uniquify: bool, exclude: &Vec<Int>) {
+    if xs.len() as Int == count
+        && !intersects(xs, exclude)
+        && xs.iter().max().unwrap() <= &max
+        && (!uniquify || is_unique(&xs))
     {
         showvec(xs);
     }
 }
 
-fn partition(count: Int, max: Int, n: Int, uniquify: bool) {
+fn partition(count: Int, max: Int, n: Int, uniquify: bool, exclude: &Vec<Int>) {
     // generate all partitions of n but only print ones fitting the spec
 
     // Knuth 7.2.1.4: Generating All Partitions
     // https://web.archive.org/web/20170330174929/http://cs.utsa.edu/~wagner/knuth/fasc3b.pdf
     let mut v: Vec<Int> = vec![n];
     while v[0] != 1 {
-        check_showvec(count, max, &v, uniquify);
+        check_showvec(count, max, &v, uniquify, &exclude);
 
         let mut x = v.pop().unwrap();
         while x == 1 {
@@ -159,7 +171,7 @@ fn partition(count: Int, max: Int, n: Int, uniquify: bool) {
             v.push(n - tot);
         }
     }
-    check_showvec(count, max, &v, uniquify);
+    check_showvec(count, max, &v, uniquify, &exclude);
 }
 
 fn trydiv(p: Int, x: &mut Int, out: &mut Vec<Int>) {
@@ -203,20 +215,21 @@ fn check_args(xs: &Vec<Int>, n: usize) -> bool {
 fn help() {
     println!(
         "Help:
-   + a b c...          - sum of arguments
-   - a b c...          - difference of arguments (left largest)
-   * a b c...          - product of arguments
-   f n                 - factorize n
-   max n               - set max cell value for pu and pd
-   pu count n          - partitions of n, unique only 
-   pd count n          - partitions of n, duplicates allowed
-   x n                 - experiments"
+   + a b c...            - sum of arguments
+   - a b c...            - difference of arguments (left largest)
+   * a b c...            - product of arguments
+   f n                   - factorize n
+   max n                 - set max cell value for pu and pd
+   pu count n [!a ...]   - partitions of n, unique only, excluding a (repeatable)
+   pd count n [!a ... ]  - partitions of n, duplicates allowed, excluding a (repeatable)
+   x n                   - experiments"
     );
 }
 
 fn parse_args(line: String, settings: &mut Settings) {
     let mut words: Vec<&str> = line.trim().split(' ').collect();
     let mut ins: Vec<Int> = vec![];
+    let mut exclude: Vec<Int> = vec![];
     let cmd = words.remove(0);
 
     for w in words.iter() {
@@ -225,8 +238,13 @@ fn parse_args(line: String, settings: &mut Settings) {
                 ins.push(x);
             }
             _ => {
-                println!("Bad number {}", w);
-                return;
+                if w.starts_with("!") {
+                    let e: Int = w.strip_prefix("!").unwrap().parse::<Int>().unwrap();
+                    exclude.push(e);
+                } else {
+                    println!("Bad number {}", w);
+                    return;
+                }
             }
         }
     }
@@ -246,12 +264,12 @@ fn parse_args(line: String, settings: &mut Settings) {
         }
         "pu" => {
             if check_max(settings.max_val) && check_args(&ins, 2) {
-                partition(ins[0], settings.max_val as Int, ins[1], true);
+                partition(ins[0], settings.max_val as Int, ins[1], true, &exclude);
             }
         }
         "pd" => {
             if check_max(settings.max_val) && check_args(&ins, 2) {
-                partition(ins[0], settings.max_val as Int, ins[1], false);
+                partition(ins[0], settings.max_val as Int, ins[1], false, &exclude);
             }
         }
         "*" => {
@@ -296,9 +314,21 @@ fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+
+    use super::*;
+
     #[test]
     fn it_works() {
         use rug::{Complete, Integer};
         assert_eq!(Integer::factorial(10).complete(), 3628800);
+    }
+
+    #[test]
+    fn intersect() {
+        let x: Vec<Int> = vec![1, 2, 3];
+        let y: Vec<Int> = vec![2, 3, 4, 5];
+        let z: Vec<Int> = vec![0, 9];
+        assert_eq!(intersects(&x, &y), true);
+        assert_eq!(intersects(&x, &z), false);
     }
 }
