@@ -220,8 +220,8 @@ fn help() {
    * a b c...            - product of arguments
    f n                   - factorize n
    max n                 - set max cell value for pu and pd
-   pu count n [!a ...]   - partitions of n, unique only, excluding a (repeatable)
-   pd count n [!a ... ]  - partitions of n, duplicates allowed, excluding a (repeatable)
+   pu count n [! a ...]   - partitions of n, unique only, excluding a (repeatable)
+   pd count n [! a ... ]  - partitions of n, duplicates allowed, excluding a (repeatable)
    x n                   - experiments"
     );
 }
@@ -230,17 +230,23 @@ fn parse_args(line: String, settings: &mut Settings) {
     let mut words: Vec<&str> = line.trim().split(' ').collect();
     let mut ins: Vec<Int> = vec![];
     let mut exclude: Vec<Int> = vec![];
+    let mut excluding: bool = false;
     let cmd = words.remove(0);
 
     for w in words.iter() {
         match w.parse::<Int>() {
             Ok(x) => {
-                ins.push(x);
+                if excluding {
+                    exclude.push(x);
+                } else {
+                    ins.push(x);
+                }
             }
             _ => {
                 if w.starts_with("!") {
-                    let e: Int = w.strip_prefix("!").unwrap().parse::<Int>().unwrap();
-                    exclude.push(e);
+                    excluding = true;
+                    //                    w.strip_prefix("!").unwrap().parse::<Int>()
+                    //                    exclude.push(e);
                 } else {
                     println!("Bad number {}", w);
                     return;
